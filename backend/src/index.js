@@ -3,14 +3,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path'); // <-- move path import here
 
 // Load environment variables
-dotenv.config(); // No path argument
+dotenv.config(); 
 
 // Log environment variables (without sensitive data)
 console.log('Environment check:');
 console.log('PORT:', process.env.PORT);
-console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Not set');
+console.log('MONGODB_URI:', process.env.MONGODB_URI);
 console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'Set' : 'Not set');
 
 // Validate required environment variables
@@ -49,6 +50,15 @@ const taskRoutes = require('./routes/tasks');
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 
+// ====> Serve static assets if in production <====
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, 'client', 'build')));
+
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+    });
+}
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
@@ -63,4 +73,4 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-}); 
+});
